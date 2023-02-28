@@ -6,16 +6,32 @@ atomic_tests:
   description: |
     Creates a base64-encoded data file and decodes it into an executable shell script
 
-    Upon successful execution, sh will execute art.sh, which is a base64 encoded command, that stdouts `echo Hello from the Atomic Red Team`.
+    Upon successful execution, sh will execute art.sh, which is a base64 encoded command, that echoes `Hello from the Atomic Red Team` 
+    and uname -v
   supported_platforms:
   - macos
   - linux
+  input_arguments:
+    shell_command:
+      description: command to encode
+      type: string
+      default: "echo Hello from the Atomic Red Team && uname -v"
+  dependency_executor_name: sh
+  dependencies:
+  - description: |
+      encode the command into base64 file
+    prereq_command: |
+      exit 1
+    get_prereq_command: |
+      echo "#{shell_command}" | base64 > /tmp/encoded.dat
   executor:
     command: |
-      sh -c "echo ZWNobyBIZWxsbyBmcm9tIHRoZSBBdG9taWMgUmVkIFRlYW0= > /tmp/encoded.dat"
       cat /tmp/encoded.dat | base64 -d > /tmp/art.sh
       chmod +x /tmp/art.sh
       /tmp/art.sh
+    cleanup_command: |
+      rm /tmp/encoded.dat 
+      rm /tmp/art.sh
     name: sh
 - name: Execute base64-encoded PowerShell
   auto_generated_guid: a50d5a97-2531-499e-a1de-5544c74432c6
@@ -28,7 +44,7 @@ atomic_tests:
   input_arguments:
     powershell_command:
       description: PowerShell command to encode
-      type: String
+      type: string
       default: Write-Host "Hey, Atomic!"
   executor:
     command: |
@@ -49,15 +65,15 @@ atomic_tests:
   input_arguments:
     registry_key_storage:
       description: Windows Registry Key to store code
-      type: String
+      type: string
       default: HKCU:Software\Microsoft\Windows\CurrentVersion
     powershell_command:
       description: PowerShell command to encode
-      type: String
+      type: string
       default: Write-Host "Hey, Atomic!"
     registry_entry_storage:
       description: Windows Registry entry to store code under key
-      type: String
+      type: string
       default: Debug
   executor:
     command: |
@@ -80,7 +96,7 @@ atomic_tests:
   input_arguments:
     url_path:
       description: url to download Exe
-      type: Url
+      type: url
       default: https://github.com/redcanaryco/atomic-red-team/raw/master/atomics/T1027/bin/T1027.zip
   dependency_executor_name: powershell
   dependencies:
@@ -110,19 +126,19 @@ atomic_tests:
   input_arguments:
     input_file:
       description: Path of the XLSM file
-      type: Path
+      type: path
       default: PathToAtomicsFolder\T1027\src\T1027-cc-macro.xlsm
     sender:
       description: sender email
-      type: String
+      type: string
       default: test@corp.com
     receiver:
       description: receiver email
-      type: String
+      type: string
       default: test@corp.com
     smtp_server:
       description: SMTP Server IP Address
-      type: String
+      type: string
       default: 127.0.0.1
   executor:
     command: |
@@ -138,11 +154,11 @@ atomic_tests:
   input_arguments:
     input_file:
       description: Path of the XLSM file
-      type: Path
+      type: path
       default: PathToAtomicsFolder\T1027\src\T1027-cc-macro.xlsm
     ip_address:
       description: Destination IP address
-      type: String
+      type: string
       default: 127.0.0.1
   executor:
     command: |
@@ -168,16 +184,21 @@ atomic_tests:
   - windows
   input_arguments:
     remote_file:
-      description: URL of file to copy
-      type: Url
+      description: URL of file to download
+      type: url
       default: https://raw.githubusercontent.com/redcanaryco/atomic-red-team/master/LICENSE.txt
     local_path:
-      description: Local path to place file
-      type: Path
+      description: Local path/filename to save the dowloaded file to
+      type: path
       default: Atomic-license.txt
   executor:
-    command: |
-      cmd /c certutil —ૹu૰rlࢰca࣢c෯he  –‮spli؅t‮‭ −"൏ᶠ൸" #{remote_file} #{local_path}
-    cleanup_command: |
-      del #{local_path} >nul 2>&1
-    name: command_prompt
+    steps: |
+      1. Copy the following command into the command prompt after replacing #{remote_file} and #{local_path} with your desired URL and filename.
+
+
+        certutil —ૹu૰rlࢰca࣢c෯he  –‮spli؅t‮‭ −"൏ᶠ൸" #{remote_file} #{local_path}
+
+
+      2. Press enter to execute the command. You will find the file or webpage you specified saved to the file you specified in the command.
+
+    name: manual
